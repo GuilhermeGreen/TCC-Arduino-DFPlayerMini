@@ -1,0 +1,434 @@
+/*
+  Programa para TCC, ponto de onibus inteligente, primeiro passo, falando hora com arduino, ao apertar um botão, falará a hora e a chegada do próximo ônibus.
+   Feito por Guilherme Murilo Green
+*/
+
+
+// --- Bibliotecas ---
+#include "SoftwareSerial.h"
+#include <DS3231.h>          //Inclui a biblioteca do DS3231 Shield
+#include <DFRobotDFPlayerMini.h> //Inclui biblioteca DF player mini
+#include <VirtualWire.h>
+
+// --- Comunicação I2C rtc ---
+DS3231  rtc(SDA, SCL);
+
+int hora=0;
+int minuto=0;
+
+int equalizacao = 0;//(0=normal, 1=pop, 2= rock, 3=jazz, 4=classic, 5=bass)
+int S1_cecap = 2; //declarando botão S1
+int S2_terminal = 4;
+int S3_hortolandia = 7;
+int memoria_s1 =0;
+int memoria_s2 = 0;
+int memoria_s3 = 0;
+int minutos_agregado = 0;
+Time t;  // tipo de dado time_t é definido pela biblioteca ISO da linguagem C para armazenar valores de tempo.
+
+//Inicia a serial por software nos pinos 10 e 11
+SoftwareSerial mySoftwareSerial(10, 11); // RX,TX
+
+//Objeto responsável pela comunicação com módulo MP3 (Df player mini)
+DFRobotDFPlayerMini myDFPlayer;
+
+void setup()
+{
+  //Comunicacao serial com o modulo
+  mySoftwareSerial.begin(9600);
+ rtc.begin();                   //Inicializa RTC
+//Descomente as linhas a seguir para configurar o horário, após comente e faça o upload novamente para o Arduino
+  //rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to SUNDAY
+  rtc.setTime(9,42, 0);     // Set the time to 12:00:00 (24hr format)
+   pinMode( S1_cecap,INPUT);
+   pinMode(S2_terminal,INPUT);
+    pinMode(S3_hortolandia,INPUT);
+    
+  Serial.begin(9600);
+   Serial.println();
+  Serial.println(F("DFRobot DFPlayer Mini"));
+  Serial.println(F("Inicializando modulo DFPlayer... (3~5 segundos)"));
+  if (!myDFPlayer.begin(mySoftwareSerial))
+  {
+    Serial.println(F("Nao inicializado:"));
+    Serial.println(F("1.Cheque as conexoes do DFPlayer Mini"));
+    Serial.println(F("2.Insira um cartao SD"));
+    while (true);
+  }
+  Serial.println();
+  Serial.println(F("Modulo DFPlayer Mini inicializado!"));
+  //Comunicacao serial com o modulo
+   mySoftwareSerial.begin(9600);
+  
+//Definicoes iniciais DF player music
+  myDFPlayer.setTimeOut(500); //Timeout serial 500ms
+  myDFPlayer.volume(10); //Volume 
+  myDFPlayer.EQ(5); //Equalizacao normal
+  
+vw_set_ptt_inverted(true);
+    vw_set_rx_pin(12); // Define o pino 12 do Arduino como entrada 
+//de dados do receptor
+    vw_setup(300);             // Bits por segundo
+     pinMode(13, OUTPUT);
+    vw_rx_start();// Inicializa 
+}
+
+// --- Loop Infinito ---
+void loop()
+{
+ 
+   if (digitalRead (S1_cecap)==true && digitalRead (S2_terminal)== false && digitalRead (S3_hortolandia) == false)
+{
+ 
+   memoria_s1 = 1;
+    memoria_s2 = 0;
+    memoria_s3 = 0;
+}
+
+  else if (digitalRead (S1_cecap)==false && digitalRead (S2_terminal)== true && digitalRead (S3_hortolandia) ==false)
+{
+  
+    memoria_s2 = 1;
+    memoria_s1 = 0;
+    memoria_s3 = 0;
+}
+
+  else if (digitalRead (S1_cecap)==false && digitalRead (S2_terminal)== false && digitalRead (S3_hortolandia) ==true)
+{
+  
+    memoria_s3 = 1;
+    memoria_s1 = 0;
+    memoria_s2 = 0;
+    }
+
+
+else
+{
+     memoria_s1 = 0; 
+     memoria_s2 = 0; 
+     memoria_s3 = 0;
+}
+
+ 
+  if (memoria_s1 == 1 || memoria_s2 == 1 || memoria_s3 ==1)
+  {
+    delay(100);
+myDFPlayer.play((char)78);
+
+t = rtc.getTime();
+hora=(t.hour);
+  minuto=(t.min);
+
+delay(2000);
+
+switch (hora){
+     case 1: myDFPlayer.play  ((char)1);
+     break;
+      case 2: myDFPlayer.play  ((char)2);
+     break;
+      case 3  :  myDFPlayer.play  ((char)3);
+     break;
+      case 4: myDFPlayer.play ((char)4);
+     break;
+      case 5: myDFPlayer.play ((char)5);
+     break;
+      case 6: myDFPlayer.play ((char)6);
+     break;
+      case 7: myDFPlayer.play ((char)7);
+     break;
+      case 8: myDFPlayer.play ((char)8);
+     break;
+      case 9: myDFPlayer.play ((char)9);
+     break;
+      case 10: myDFPlayer.play ((char)10);
+     break;
+      case 11: myDFPlayer.play ((char)11);
+     break;
+      case 12: myDFPlayer.play ((char)12);
+     break;
+      case 13: myDFPlayer.play ((char)13);
+     break;
+      case 14: myDFPlayer.play((char)14);
+     break;
+      case 15: myDFPlayer.play ((char)15);
+     break;
+      case 16: myDFPlayer.play ((char)16);
+     break;
+      case 17: myDFPlayer.play((char)17);
+     break;
+      case 18: myDFPlayer.play((char)18);
+     break;
+      case 19: myDFPlayer.play ((char)19);
+     break;
+      case 20: myDFPlayer.play ((char)20);
+     break;
+      case 21: myDFPlayer.play ((char)21);
+     break;
+     case 22: myDFPlayer.play ((char)22);
+     break;
+    case 23: myDFPlayer.play ((char)23);
+     break;
+     case 00: myDFPlayer.play ((char)24);
+     break;
+      }
+   
+  
+    delay(2500);
+     
+     switch (minuto){
+
+     case 1: myDFPlayer.play ((char)25);
+     break;
+      case 2: myDFPlayer.play ((char)26);
+     break;
+      case 3  :  myDFPlayer.play  ((char)27);
+     break;
+      case 4: myDFPlayer.play ((char)28);
+     break;
+      case 5: myDFPlayer.play ((char)29);
+     break;
+      case 6: myDFPlayer.play ((char)30);
+     break;
+      case 7: myDFPlayer.play ((char)31);
+     break;
+      case 8: myDFPlayer.play ((char)32);
+     break;
+      case 9: myDFPlayer.play ((char)33);
+     break;
+      case 10: myDFPlayer.play ((char)34);
+     break;
+      case 11: myDFPlayer.play ((char)35);
+     break;
+      case 12: myDFPlayer.play ((char)36);
+     break;
+      case 13: myDFPlayer.play ((char)37);
+     break;
+      case 14: myDFPlayer.play ((char)38);
+     break;
+      case 15: myDFPlayer.play ((char)39);
+     break;
+      case 16: myDFPlayer.play ((char)40);
+     break;
+      case 17: myDFPlayer.play ((char)41);
+     break;
+      case 18: myDFPlayer.play((char)42);
+     break;
+      case 19: myDFPlayer.play ((char)43);
+     break;
+      case 20: myDFPlayer.play ((char)44);
+     break;
+      case 21: myDFPlayer.play ((char)45);
+     break;
+     case 22: myDFPlayer.play((char)46);
+     break;
+     case 23: myDFPlayer.play ((char)47);
+     break;
+      case 24: myDFPlayer.play ((char)48);
+     break;
+     case 25: myDFPlayer.play  ((char)49);
+     break;
+      case 26: myDFPlayer.play  ((char)50);
+     break;
+      case 27 :  myDFPlayer.play  ((char)51);
+     break;
+      case 28: myDFPlayer.play ((char)52);
+     break;
+      case 29: myDFPlayer.play ((char)53);
+     break;
+      case 30: myDFPlayer.play ((char)54);
+     break;
+      case 31: myDFPlayer.play ((char)55);
+     break;
+      case 32: myDFPlayer.play ((char)56);
+     break;
+      case 33: myDFPlayer.play ((char)57);
+     break;
+      case 34: myDFPlayer.play ((char)58);
+     break;
+      case 35: myDFPlayer.play ((char)59);
+     break;
+      case 36: myDFPlayer.play ((char)60);
+     break;
+      case 37: myDFPlayer.play((char)61);
+     break;
+      case 38: myDFPlayer.play ((char)62);
+     break;
+      case 39: myDFPlayer.play ((char)63);
+     break;
+      case 40: myDFPlayer.play ((char)64);
+     break;
+      case 41: myDFPlayer.play ((char)65);
+     break;
+      case 42: myDFPlayer.play ((char)66);
+     break;
+      case 43: myDFPlayer.play ((char)67);
+     break;
+      case 44: myDFPlayer.play ((char)68);
+     break;
+      case 45: myDFPlayer.play ((char)69);
+     break;
+     case 46: myDFPlayer.play ((char)70);
+     break;
+     case 47: myDFPlayer.play ((char)71);
+     break;
+      case 48: myDFPlayer.play ((char)72);
+     break;
+     case 49: myDFPlayer.play  ((char)73);
+     break;
+      case 50: myDFPlayer.play  ((char)74);
+     break;
+      case 51 :  myDFPlayer.play  ((char)75);
+     break;
+      case 52 : myDFPlayer.play ((char)76);
+     break;
+      case 53: myDFPlayer.play ((char)77);
+     break;
+      case 54: myDFPlayer.play ((char)78);
+     break;
+      case 55: myDFPlayer.play((char)79);
+     break;
+      case 56: myDFPlayer.play ((char)80);
+     break;
+      case 57: myDFPlayer.play ((char)81);
+     break;
+      case 58: myDFPlayer.play ((char)82);
+     break;
+      case 59: myDFPlayer.play ((char)84);
+     break;
+      case 00: myDFPlayer.play ((char)85);
+     break;
+     }
+
+
+delay(3000);
+
+  }
+  
+minutos_agregado = hora*60+minuto;
+
+
+ if (memoria_s1 == 1 && minutos_agregado<=(9*60+35))
+   {
+myDFPlayer.play ((char)87);
+  delay(1000);
+
+   }
+    
+if (memoria_s1 == 1 && minutos_agregado<=(9*60+10))
+   {
+myDFPlayer.play ((char)88);
+ delay(1000);
+
+
+}
+ 
+  minutos_agregado = hora*60+minuto;
+
+  
+ if (memoria_s1 == 1 && minutos_agregado<(8*60+00))
+   {
+myDFPlayer.play ((unsigned int)79);    //Fala que a chegada do ônibus do destino Cecap 8 horas
+  delay(5000);
+   }
+      
+    else if (memoria_s1 == 1 && minutos_agregado<(9*60+10) && minutos_agregado>(8*60+00))
+    {
+    myDFPlayer.play ((unsigned int)80);   //Fala que a chegada do ônibus do destino Cecap 
+    delay(5000);
+    }
+   
+      else if (memoria_s1 == 1 && minutos_agregado<(10*60+20)&& minutos_agregado>(9*60+10))
+         {
+      myDFPlayer.play ((unsigned int)81);   //Fala que a chegada do ônibus do destino Cecap 9:10
+         delay(5000);
+      
+        }
+  
+          else if (memoria_s1 == 1 && minutos_agregado<(11*60+30)&& minutos_agregado>(10*60+20))
+          {
+          myDFPlayer.play ((unsigned int)82);   //Fala que a chegada do ônibus do destino Cecap 10:20         
+          delay(6000);         
+          }
+   
+   if (memoria_s2 == 1 && minutos_agregado<(8*60+20))
+   {
+myDFPlayer.play ((unsigned int)83);   //Fala que a chegada do ônibus do destino terminal central 8:20    
+ delay(5000);
+
+  }
+   
+   else if (memoria_s2 == 1 && minutos_agregado<(9*60+20))
+   {
+myDFPlayer.play ((unsigned int)84);    //Fala que a chegada do ônibus do destino terminal central 9:20 
+  delay(5000);
+
+  }
+   
+else if (memoria_s2 == 1 && minutos_agregado<(10*60+30))
+   {
+myDFPlayer.play ((unsigned int)85);   //Fala que a chegada do ônibus do destino terminal central 10:30 
+  delay(5000);
+
+   }
+   
+ 
+  else if (memoria_s2 == 1 && minutos_agregado<(11*60+40))
+   {
+myDFPlayer.play ((unsigned int)86);   //Fala que a chegada do ônibus do destino terminal central 11:40 
+  delay(5000);
+
+   }
+   
+  if (memoria_s3 == 1 && minutos_agregado<(8*60+40))
+   {
+myDFPlayer.play ((unsigned int)87);   //Fala que a chegada do ônibus do destino terminal hortolândia 8:40 
+  delay(5000);
+
+    } 
+     
+else if (memoria_s3 == 1 && minutos_agregado<(9*60+30))
+   {
+myDFPlayer.play ((unsigned int)88);   //Fala que a chegada do ônibus do destino terminal hortolândia 9:30
+  delay(5000);
+
+ }
+  
+   else if (memoria_s3 == 1 && minutos_agregado<(10*60+40))
+   {
+myDFPlayer.play ((unsigned int)89);   //Fala que a chegada do ônibus do destino terminal hortolândia 10:40
+  delay(5000);
+
+   } 
+
+ else  if (memoria_s3 == 1 && minutos_agregado<(11*60+50))
+   {
+myDFPlayer.play ((unsigned int)90);    //Fala que a chegada do ônibus do destino terminal hortolândia 11:50
+ delay(5000);
+
+  }
+
+
+  
+
+//Programa que vai avisar o usuário
+ //Receptor 
+ uint8_t buf[VW_MAX_MESSAGE_LEN];
+ uint8_t buflen = VW_MAX_MESSAGE_LEN;
+
+
+if (vw_get_message(buf, &buflen)) // Non-blocking
+{
+
+if((buf[0]=='A')&&(buf[1]=='1')){ 
+
+myDFPlayer.play ((char)91);
+}
+
+if((buf[0]=='B')&&(buf[1]=='1')){   
+        myDFPlayer.play ((char)92);
+      
+    }
+}
+delay(3000);
+
+   } 
